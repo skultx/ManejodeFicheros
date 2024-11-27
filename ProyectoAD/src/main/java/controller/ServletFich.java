@@ -1,5 +1,6 @@
 package controller;
 
+import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -47,6 +48,8 @@ public class ServletFich extends HttpServlet {
 		case "enviar": {
 			
 			if (dato1.isBlank() || dato2.isBlank() || dato3.isBlank() || dato4.isBlank() || dato5.isBlank() || dato6.isBlank()) {
+	
+				
 				respuesta = "(*) El nombre y el codigo pin son obligatorios";
 				page = "TratamientoFich.jsp";
 			} else {
@@ -59,6 +62,10 @@ public class ServletFich extends HttpServlet {
 		}
 		
 		
+		request.setAttribute("errorMensaje", respuesta);
+		RequestDispatcher dispatcher = request.getRequestDispatcher("TratamientoFich.jsp");
+		dispatcher.forward(request, response);
+
 		
 	}
 
