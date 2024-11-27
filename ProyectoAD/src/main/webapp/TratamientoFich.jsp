@@ -80,14 +80,8 @@
 			</tr>
 		</table>
 		<br>
-
-		<!-- Mensaje de error, Hay que configurarlo en el servlet
-        <span>(*) Los campos no pueden estar vacíos</span>
-        <br><br>-->
-
 		<button type="submit" name="boton" value="enviar">Enviar</button>
 	</form>
-
 
 </body>
 </html>

@@ -43,7 +43,6 @@ public class ServletFich extends HttpServlet {
 		String dato6 = request.getParameter("dato6");
 
 
-		
 		switch (request.getParameter("boton")){
 		case "enviar": {
 			
@@ -60,8 +59,7 @@ public class ServletFich extends HttpServlet {
 			break;
 		}
 		}
-		
-		
+
 		request.setAttribute("errorMensaje", respuesta);
 		RequestDispatcher dispatcher = request.getRequestDispatcher(page);
 		dispatcher.forward(request, response);
