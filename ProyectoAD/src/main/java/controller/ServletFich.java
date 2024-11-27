@@ -63,7 +63,7 @@ public class ServletFich extends HttpServlet {
 		
 		
 		request.setAttribute("errorMensaje", respuesta);
-		RequestDispatcher dispatcher = request.getRequestDispatcher("TratamientoFich.jsp");
+		RequestDispatcher dispatcher = request.getRequestDispatcher(page);
 		dispatcher.forward(request, response);
 
 		
