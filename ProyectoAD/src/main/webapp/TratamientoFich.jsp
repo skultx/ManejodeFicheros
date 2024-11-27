@@ -88,7 +88,7 @@
         <span>(*) Los campos no pueden estar vacíos</span>
         <br><br>-->
 
-        <button type="submit">Enviar</button>
+        <button type="submit" name="boton" value="enviar">Enviar</button>
     </form>
 </body>
 </html>
