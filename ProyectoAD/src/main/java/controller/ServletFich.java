@@ -11,6 +11,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 import org.apache.jena.rdf.model.Model;
@@ -99,40 +103,33 @@ public class ServletFich extends HttpServlet {
                 	break;
                 
             	case "XML":
-                    String xmlFilePath = "C:\\Users\\fraferal\\git\\ManejodeFicheros\\ProyectoAD\\mixmlLeer.xml";
+            	    String xmlFilePath = "C:\\Users\\gusip\\git\\ManejodeFicheros\\ProyectoAD\\mixmlLeer.xml";
 
-                    if ("lectura".equals(accion)) {
-                        try {
-                            leerXML(xmlFilePath);
-                            respuesta = "Archivo XML leído correctamente.";
-                        } catch (Exception e) {
-                            respuesta = "Error al leer el archivo XML: " + e.getMessage();
-                            request.setAttribute("errorLeerArchivoXML", true);
-                            page = "Error.jsp";
-                        }
-                    } else if ("escritura".equals(accion)) {
-                        try {
-                            // Nombres y valores de los elementos
-                            String[] nombresElementos = {
-                                "CODIGO", "TITULO_DEL_CURSO",
-                                "DESCRIPCION_OBJETIVOS", "REQUISITOS",
-                                "FAMILIA", "DURACION_HORAS"
-                            };
-                            String[] valoresElementos = {
-                                dato1, dato2, dato3,
-                                dato4, dato5, dato6
-                            };
+            	    if ("lectura".equals(accion)) {
+            	        try {
+            	            List<Map<String, String>> listaDatos = leerDatosXML(xmlFilePath);
+            	            request.setAttribute("listaDatos", listaDatos);
+            	            respuesta = "Datos cargados correctamente.";
+            	            page = "AccesoDatosA.jsp";
+            	        } catch (Exception e) {
+            	            respuesta = "Error al leer el archivo XML: " + e.getMessage();
+            	            page = "Error.jsp";
+            	        }
+            	    } else if ("escritura".equals(accion)) {
+            	        try {
+            	            String[] nombresElementos = { "CODIGO", "TITULO_DEL_CURSO", "DESCRIPCION_OBJETIVOS", "REQUISITOS", "FAMILIA", "DURACION_HORAS" };
+            	            String[] valoresElementos = { dato1, dato2, dato3, dato4, dato5, dato6 };
+            	            String nuevoId = String.valueOf(System.currentTimeMillis() % 1000);
 
-                            //Para dar un ID "aleatorio" a los nuevos introducidos
-                            String nuevoId = String.valueOf(System.currentTimeMillis() % 1000);
-                            escribirXML(xmlFilePath, nombresElementos, valoresElementos, nuevoId);
-                            respuesta = "Datos añadidos al archivo XML correctamente.";
-                        } catch (Exception e) {
-                            respuesta = "Error al actualizar el archivo XML: " + e.getMessage();
-                        }
-                    }
-                    page = "TratamientoFich.jsp";
-                    break;
+            	            escribirXML(xmlFilePath, nombresElementos, valoresElementos, nuevoId);
+            	            respuesta = "Datos añadidos al archivo XML correctamente.";
+            	            page = "TratamientoFich.jsp"; // Redirige al formulario
+            	        } catch (Exception e) {
+            	            respuesta = "Error al actualizar el archivo XML: " + e.getMessage();
+            	            page = "Error.jsp";
+            	        }
+            	    }
+            	    break;
             }
         }
         // Enviar la respuesta, para que segun lo seleccionado, haga lo que se quiera
@@ -250,56 +247,36 @@ public class ServletFich extends HttpServlet {
     
     //PARTE DE ALEJANDRO
     //Para la lectura
-    private void leerXML(String xmlFilePath) {
-        try {
-            // Ubicación del archivo XML
-            File fXmlFile = new File("C:\\Users\\fraferal\\git\\ManejodeFicheros\\ProyectoAD\\mixmlLeer.xml");
+    private List<Map<String, String>> leerDatosXML(String xmlFilePath) throws Exception {
+        List<Map<String, String>> listaDatos = new ArrayList<>();
 
-            // Crear la instancia del documento XML
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            Document doc = dBuilder.parse(fXmlFile);
-            doc.getDocumentElement().normalize();
+        File fXmlFile = new File(xmlFilePath);
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+        Document doc = dBuilder.parse(fXmlFile);
+        doc.getDocumentElement().normalize();
 
-            // Para conocer cual es el nodo padre, no hace falta pero es informacion adicional
-            System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
+        NodeList nList = doc.getElementsByTagName("row");
 
-            // Buscar todos los elementos <row>
-            NodeList nList = doc.getElementsByTagName("row");
-            System.out.println("----------------------------");
+        for (int temp = 0; temp < nList.getLength(); temp++) {
+            Node nNode = nList.item(temp);
 
-            // Recorrer cada elemento <row>
-            for (int temp = 0; temp < nList.getLength(); temp++) {
-                Node nNode = nList.item(temp);
+            if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                Element eElement = (Element) nNode;
 
-                if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-                    Element eElement = (Element) nNode;
+                Map<String, String> datos = new HashMap<>();
+                datos.put("id", eElement.getAttribute("_id"));
+                datos.put("codigo", eElement.getElementsByTagName("CODIGO").item(0).getTextContent());
+                datos.put("tituloCurso", eElement.getElementsByTagName("TITULO_DEL_CURSO").item(0).getTextContent());
+                datos.put("descripcionObjetivos", eElement.getElementsByTagName("DESCRIPCION_OBJETIVOS").item(0).getTextContent());
+                datos.put("requisitos", eElement.getElementsByTagName("REQUISITOS").item(0).getTextContent());
+                datos.put("familia", eElement.getElementsByTagName("FAMILIA").item(0).getTextContent());
+                datos.put("duracionHoras", eElement.getElementsByTagName("DURACION_HORAS").item(0).getTextContent());
 
-                    String id = eElement.getAttribute("_id");
-                    // Imprimir el valor del atributo _id como "Current Element"
-                    System.out.println("\033[1m\nElemento (ID): " + id + "\033[0m");
-
-                    // Extraer el valor de los elementos dentro de <row>
-                    String codigo = eElement.getElementsByTagName("CODIGO").item(0).getTextContent();
-                    String tituloCurso = eElement.getElementsByTagName("TITULO_DEL_CURSO").item(0).getTextContent();
-                    String descripcionObjetivos = eElement.getElementsByTagName("DESCRIPCION_OBJETIVOS").item(0).getTextContent();
-                    String requisitos = eElement.getElementsByTagName("REQUISITOS").item(0).getTextContent(); 
-                    String familia = eElement.getElementsByTagName("FAMILIA").item(0).getTextContent(); 
-                    String duracionHoras = eElement.getElementsByTagName("DURACION_HORAS").item(0).getTextContent(); 
-
-                    //Para mostrar la informacion
-                    System.out.println("Codigo : " + codigo);
-                    System.out.println("Titulo del curso : " + tituloCurso);
-                    System.out.println("Descripcion-Objetivos : " + descripcionObjetivos);
-                    System.out.println("REQUISITOS : " + requisitos);
-                    System.out.println("FAMILIA : " + familia);
-                    System.out.println("DURACION_HORAS : " + duracionHoras);
-                }
+                listaDatos.add(datos);
             }
-
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+        return listaDatos;
     }
     //Para la escritura
     private void escribirXML(String rutaArchivoXML, String[] nombresElementos, String[] valoresElementos, String id) throws Exception {
