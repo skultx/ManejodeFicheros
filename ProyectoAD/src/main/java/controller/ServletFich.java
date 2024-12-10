@@ -80,7 +80,7 @@ public class ServletFich extends HttpServlet {
                 	break;
                 
             	case "XML":
-                    String xmlFilePath = "C:/Users/fraferal/Downloads/mixmlLeer.xml";
+                    String xmlFilePath = "C:\\Users\\fraferal\\git\\ManejodeFicheros\\ProyectoAD\\mixmlLeer.xml";
 
                     if ("lectura".equals(accion)) {
                         try {
@@ -135,7 +135,7 @@ public class ServletFich extends HttpServlet {
     private void leerXML(String xmlFilePath) {
         try {
             // Ubicación del archivo XML
-            File fXmlFile = new File("C:/Users/fraferal/Downloads/mixmlLeer.xml");
+            File fXmlFile = new File("C:\\Users\\fraferal\\git\\ManejodeFicheros\\ProyectoAD\\mixmlLeer.xml");
 
             // Crear la instancia del documento XML
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
