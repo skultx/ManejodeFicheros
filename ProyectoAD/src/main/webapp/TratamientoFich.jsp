@@ -64,7 +64,7 @@
 						</tr>
 						<tr>
 							<td><label for="dato5">DATO5 : </label></td>
-							<td><textarea name="datos" id="datos" ></textarea></td>
+							<td><input type="text" name="dato5" id="dato5" ></td>
 						</tr>
 						<tr>
 							<td><label for="dato6">DATO6 : </label></td>
@@ -73,7 +73,6 @@
 						<tr>
 							<td colspan="2"><span style="color: red;"> <%=request.getAttribute("errorMensaje") != null ? request.getAttribute("errorMensaje") : ""%>
 							</span></td>
-
 						</tr>
 					</table>
 				</td>
@@ -82,8 +81,5 @@
 		<br>
 		<button type="submit" name="boton" value="enviar">Enviar</button>
 	</form>
-	
-	<h5>HOLA!!</h5>
-
 </body>
 </html>
