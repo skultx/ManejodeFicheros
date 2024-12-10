@@ -7,10 +7,18 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Scanner;
 
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
+import org.apache.jena.vocabulary.VCARD;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -23,6 +31,17 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Scanner;
+
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.vocabulary.VCARD;
 
 /**
  * Servlet implementation class ServletFich
@@ -129,6 +148,106 @@ public class ServletFich extends HttpServlet {
     //PARTE DE GONZALO
     
     //PARTE DE LUCAS
+    private void escribirRDF() {
+    	Scanner scanner = new Scanner(System.in);
+
+        // Pedir los 6 datos
+        System.out.print("Introduce el nombre: ");
+        String name = scanner.nextLine();
+
+        System.out.print("Introduce la edad: " );
+        String age = scanner.nextLine();
+
+        System.out.print("Introduce el correo electrónico: ");
+        String email = scanner.nextLine();
+
+        System.out.print("Introduce la URL única del recurso: ");
+        String url = scanner.nextLine();
+
+        System.out.print("Introduce el nombre de alguien que conozca: ");
+        String friendName = scanner.nextLine();
+
+        System.out.print("Introduce la URL única del amigo: ");
+        String friendUrl = scanner.nextLine();
+
+        // Pedir la ubicación del archivo RDF
+        System.out.println("Introduce la ubicación del archivo RDF:");
+        String rdfFilePath = scanner.nextLine();
+
+        try {
+            // Cargar o crear un modelo RDF
+            Model model = ModelFactory.createDefaultModel();
+            File rdfFile = new File(rdfFilePath);
+            if (rdfFile.exists()) {
+                model.read(new FileInputStream(rdfFile), null);
+            } else {
+                // Añadir prefijos al modelo si el archivo no existe
+                model.setNsPrefix("vcard", VCARD.getURI());
+                model.setNsPrefix("foaf", "http://xmlns.com/foaf/0.1/");
+            }
+
+            // Crear las descripciones
+            Resource person = model.createResource(url)
+                    .addProperty(VCARD.FN, name)
+                    .addProperty(model.createProperty("http://xmlns.com/foaf/0.1/age"), age)
+                    .addProperty(VCARD.EMAIL, email);
+
+            Resource friend = model.createResource(friendUrl)
+                    .addProperty(VCARD.FN, friendName);
+
+            person.addProperty(model.createProperty("http://xmlns.com/foaf/0.1/knows"), friend);
+
+            // Guardar los cambios en el archivo RDF con el encabezado XML
+            try (FileOutputStream out = new FileOutputStream(rdfFile)) {
+                // Escribe manualmente la declaración XML antes del modelo RDF
+                out.write("<?xml version=\"1.0\"?>\n".getBytes());
+                model.write(out, "RDF/XML");
+            }
+
+            System.out.println("Datos añadidos correctamente al archivo RDF.");
+        } catch (IOException e) {
+            System.err.println("Error al leer o escribir el archivo RDF: " + e.getMessage());
+        }
+    }
+
+    
+    private void leerRDF() {
+    	// Ruta del archivo RDF
+        System.out.println("Introduce la ubicación del archivo RDF:");
+        String rdfFilePath = new java.util.Scanner(System.in).nextLine();
+
+        File rdfFile = new File(rdfFilePath);
+
+        // Verificar si el archivo existe
+        if (!rdfFile.exists()) {
+            System.err.println("El archivo RDF no existe: " + rdfFilePath);
+            return;
+        }
+
+        try {
+            // Crear un modelo RDF
+            Model model = ModelFactory.createDefaultModel();
+            // Leer el archivo RDF
+            model.read(new FileInputStream(rdfFile), null);
+
+            // Iterar por todos los triples y mostrarlos
+            StmtIterator iter = model.listStatements();
+            while (iter.hasNext()) {
+                Statement stmt = iter.nextStatement();
+                String subject = stmt.getSubject().toString();
+                String predicate = stmt.getPredicate().toString();
+                String object = stmt.getObject().toString();
+
+                System.out.println("Subject: " + subject);
+                System.out.println("Predicate: " + predicate);
+                System.out.println("Object: " + object);
+                System.out.println("----------------------------------------------------");
+            }
+
+        } catch (IOException e) {
+            System.err.println("Error al leer el archivo RDF: " + e.getMessage());
+        }
+    }
     
     //PARTE DE ALEJANDRO
     //Para la lectura
