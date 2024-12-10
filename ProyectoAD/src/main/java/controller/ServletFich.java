@@ -103,7 +103,7 @@ public class ServletFich extends HttpServlet {
                 	break;
                 
             	case "XML":
-            	    String xmlFilePath = "C:\\Users\\gusip\\git\\ManejodeFicheros\\ProyectoAD\\mixmlLeer.xml";
+            	    String xmlFilePath = getServletContext().getRealPath("/mixmlLeer.xml");
 
             	    if ("lectura".equals(accion)) {
             	        try {
