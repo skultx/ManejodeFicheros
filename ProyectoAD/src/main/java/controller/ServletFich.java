@@ -210,7 +210,6 @@ public class ServletFich extends HttpServlet {
         }
     }
 
-    
     private void leerRDF() {
     	// Ruta del archivo RDF
         System.out.println("Introduce la ubicación del archivo RDF:");
