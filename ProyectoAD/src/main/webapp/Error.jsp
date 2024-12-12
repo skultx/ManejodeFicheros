@@ -35,5 +35,8 @@
             Detalles adicionales: <%= request.getAttribute("javax.servlet.error.exception") %>
         </div>
     </div>
+     <form action="TratamientoFich.jsp" method="post">
+        <input type="submit" value="Volver" name="volver" />
+    </form>
 </body>
 </html>

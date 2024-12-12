@@ -105,6 +105,7 @@ List<Map<String, String>> datosJSON = (List<Map<String, String>>) request.getAtt
             </tbody>
         </table>
 
+
     <% } else if ("JSON".equals(formatoFichero)) { %>
         <h2>Datos JSON</h2>
         <table border="1">

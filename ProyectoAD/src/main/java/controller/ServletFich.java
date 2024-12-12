@@ -102,31 +102,42 @@ public class ServletFich extends HttpServlet {
 
 			case "XLS":
 				// Parte de Gonzalo
-				String rutaAbsolutaXLS = "C:\\Users\\delcrego\\git\\ManejodeFicheros\\ProyectoAD\\src\\main\\webapp\\eventos-deportivos-diciembre-2024.xls";
+				String rutaAbsolutaXLS = getServletContext().getRealPath("/eventos-deportivos-diciembre-2024.xls");
 
-				if ("lectura".equals(accion)) {
-					try {
-						List<String[]> datosXLS = leerSimilXLS(rutaAbsolutaXLS);
-						request.setAttribute("datosXLS", datosXLS);
-						page = "AccesoDatosA.jsp";
-					} catch (FileNotFoundException e) {
-						request.setAttribute("errorMensaje", "El archivo XLS no se encuentra: " + e.getMessage());
-						page = "Error.jsp";
-					} catch (IOException e) {
-						request.setAttribute("errorMensaje", "Error al leer el archivo XLS: " + e.getMessage());
-						page = "Error.jsp";
-					}
-				} else if ("escritura".equals(accion)) {
-					try {
-						String[] valoresFila = { dato1, dato2, dato3, dato4, dato5, dato6 };
-						escribirSimilXLS(rutaAbsolutaXLS, valoresFila);
-						request.setAttribute("mensaje", "Datos escritos correctamente.");
-						page = "TratamientoFich.jsp";
-					} catch (IOException e) {
-						request.setAttribute("errorMensaje", "Error al escribir en el archivo XLS: " + e.getMessage());
-						page = "Error.jsp";
-					}
-				}
+			    if ("lectura".equals(accion)) {
+			        try {
+			            // Leer el archivo XLS
+			            List<String[]> datosXLS = leerSimilXLS(rutaAbsolutaXLS);
+			            
+			            // Enviar los datos al JSP como atributo
+			            request.setAttribute("datosXLS", datosXLS);
+			            
+			            // Redirigir a la página JSP
+			            page = "AccesoDatosA.jsp";
+			        } catch (FileNotFoundException e) {
+			            request.setAttribute("errorMensaje", "El archivo XLS no se encuentra: " + e.getMessage());
+			            page = "Error.jsp";
+			        } catch (IOException e) {
+			            request.setAttribute("errorMensaje", "Error al leer el archivo XLS: " + e.getMessage());
+			            page = "Error.jsp";
+			        }
+			    } else if ("escritura".equals(accion)) {
+			        try {
+			            // Obtener los valores del formulario
+			            String[] valoresFila = { dato1, dato2, dato3, dato4, dato5, dato6 };
+			            
+			            // Escribir los datos en el archivo XLS
+			            escribirSimilXLS(rutaAbsolutaXLS, valoresFila);
+			            
+			            // Mensaje de éxito
+			            request.setAttribute("mensaje", "Datos escritos correctamente.");
+			            page = "TratamientoFich.jsp";
+			        } catch (IOException e) {
+			            request.setAttribute("errorMensaje", "Error al escribir en el archivo XLS: " + e.getMessage());
+			            page = "Error.jsp";
+			        }
+			    }
+
 				break;
 
 			case "CSV":
@@ -315,49 +326,53 @@ public class ServletFich extends HttpServlet {
 	}
 
 	// PARTE DE GONZALO
-	// Lectura de CSV con UTF-8
 	private List<String[]> leerSimilXLS(String rutaArchivo) throws IOException {
-		List<String[]> datos = new ArrayList<>();
-		File archivo = new File(rutaArchivo);
+	    List<String[]> datos = new ArrayList<>();
+	    File archivo = new File(rutaArchivo);
 
-		if (!archivo.exists()) {
-			throw new FileNotFoundException("El archivo no existe en la ruta especificada: " + rutaArchivo);
-		}
+	    if (!archivo.exists()) {
+	        throw new FileNotFoundException("El archivo no existe en la ruta especificada: " + rutaArchivo);
+	    }
 
-		// Usar InputStreamReader con UTF-8 para leer correctamente los caracteres
-		try (BufferedReader lector = new BufferedReader(new InputStreamReader(new FileInputStream(archivo), "UTF-8"))) {
-			String linea;
-			while ((linea = lector.readLine()) != null) {
-				String[] fila = linea.split(";"); // Separar por punto y coma, adaptando a CSV
-				datos.add(fila);
-			}
-		}
-
-		return datos;
+	    // Leer el archivo como texto estructurado (simulación de CSV)
+	    try (BufferedReader lector = new BufferedReader(new InputStreamReader(new FileInputStream(archivo), "UTF-8"))) {
+	        String linea;
+	        while ((linea = lector.readLine()) != null) {
+	            String[] fila = linea.split(";"); // Suponiendo que los datos están separados por punto y coma
+	            datos.add(fila);
+	        }
+	    }
+	    return datos;
 	}
 
-	// Escritura en archivo CSV con UTF-8
+
 	private void escribirSimilXLS(String rutaArchivo, String[] valoresFila) throws IOException {
-		File archivo = new File(rutaArchivo);
+	    File archivo = new File(rutaArchivo);
 
-		// Crear archivo si no existe
-		if (!archivo.exists()) {
-			archivo.createNewFile();
-		}
+	    // Crear el archivo si no existe
+	    if (!archivo.exists()) {
+	        if (!archivo.createNewFile()) {
+	            throw new IOException("No se pudo crear el archivo: " + rutaArchivo);
+	        }
+	    }
 
-		try (BufferedWriter escritor = new BufferedWriter(
-				new OutputStreamWriter(new FileOutputStream(archivo, true), "UTF-8"))) {
-			StringBuilder linea = new StringBuilder();
-			for (int i = 0; i < valoresFila.length; i++) {
-				linea.append(valoresFila[i]);
-				if (i < valoresFila.length - 1) {
-					linea.append(";"); // Separar con punto y coma
-				}
-			}
-			escritor.write(linea.toString());
-			escritor.newLine(); // Nueva línea para el próximo registro
-		}
+	    // Escribir en el archivo
+	    try (BufferedWriter escritor = new BufferedWriter(
+	            new OutputStreamWriter(new FileOutputStream(archivo, true), "UTF-8"))) {
+	        StringBuilder linea = new StringBuilder();
+	        for (int i = 0; i < valoresFila.length; i++) {
+	            linea.append(valoresFila[i]);
+	            if (i < valoresFila.length - 1) {
+	                linea.append(";"); // Separar columnas con punto y coma
+	            }
+	        }
+	        escritor.write(linea.toString());
+	        escritor.newLine(); // Agregar una nueva línea después de cada fila
+	    } catch (IOException e) {
+	        throw new IOException("Error al escribir en el archivo: " + rutaArchivo, e);
+	    }
 	}
+
 
 	// PARTE DE LUCAS
 	private void escribirRDF() {
