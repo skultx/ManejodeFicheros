@@ -18,6 +18,9 @@ List<Map<String, String>> listaDatosXML = (List<Map<String, String>>) request.ge
 
 // Recuperar la opción de formato seleccionada
 List<String[]> datosXLS = (List<String[]>) request.getAttribute("datosXLS");
+
+//Para JSON
+List<Map<String, String>> datosJSON = (List<Map<String, String>>) request.getAttribute("datosJSON");
 %>
 <html>
 <head>
@@ -104,7 +107,24 @@ List<String[]> datosXLS = (List<String[]>) request.getAttribute("datosXLS");
 
     <% } else if ("JSON".equals(formatoFichero)) { %>
         <h2>Datos JSON</h2>
-        <p>Procesamiento de datos JSON pendiente de implementación.</p>
+        <table border="1">
+            <thead>
+                <tr>
+                    <% for (String key : datosJSON.get(0).keySet()) { %>
+                        <th><%= key %></th>
+                    <% } %>
+                </tr>
+            </thead>
+            <tbody>
+                <% for (Map<String, String> fila : datosJSON) { %>
+                    <tr>
+                        <% for (String key : fila.keySet()) { %>
+                            <td><%= fila.get(key) %></td>
+                        <% } %>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
 
     <% } else if ("RDF".equals(formatoFichero)) { %>
         <h2>Datos RDF</h2>
