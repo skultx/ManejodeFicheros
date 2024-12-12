@@ -45,7 +45,6 @@ import java.util.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.opencsv.*;
@@ -142,26 +141,26 @@ public class ServletFich extends HttpServlet {
 
 			case "JSON":
 				// Parte de Serafin
-                String jsonFilePath = getServletContext().getRealPath("/instalaciones.json");
-                if ("lectura".equals(accion)) {
-                    try {
-                        lecturaJSON(jsonFilePath, request);
-                        page = "AccesoDatosA.jsp";
-                    } catch (Exception e) {
-                        request.setAttribute("errorMensaje", "Error al leer el archivo JSON: " + e.getMessage());
-                        page = "Error.jsp";
-                    }
-                } else if ("escritura".equals(accion)) {
-                    try {
-                        escrituraJSON(jsonFilePath, dato1, dato2, dato3, dato4, dato5, dato6, request);
-                        request.setAttribute("mensaje", "Datos escritos correctamente.");
-                        page = "TratamientoFich.jsp";
-                    } catch (Exception e) {
-                        request.setAttribute("errorMensaje", "Error al escribir en el archivo JSON: " + e.getMessage());
-                        page = "Error.jsp";
-                    }
-                }
-                break;
+				String jsonFilePath = getServletContext().getRealPath("/instalaciones.json");
+				if ("lectura".equals(accion)) {
+					try {
+						lecturaJSON(jsonFilePath, request);
+						page = "AccesoDatosA.jsp";
+					} catch (Exception e) {
+						request.setAttribute("errorMensaje", "Error al leer el archivo JSON: " + e.getMessage());
+						page = "Error.jsp";
+					}
+				} else if ("escritura".equals(accion)) {
+					try {
+						escrituraJSON(jsonFilePath, dato1, dato2, dato3, dato4, dato5, dato6);
+						request.setAttribute("mensaje", "Datos escritos correctamente.");
+						page = "TratamientoFich.jsp";
+					} catch (Exception e) {
+						request.setAttribute("errorMensaje", "Error al escribir en el archivo JSON: " + e.getMessage());
+						page = "Error.jsp";
+					}
+				}
+				break;
 
 			case "XML":
 				String xmlFilePath = getServletContext().getRealPath("/mixmlLeer.xml");
@@ -252,72 +251,68 @@ public class ServletFich extends HttpServlet {
 
 	// PARTE DE SERAFIN
 	private void lecturaJSON(String jsonFilePath, HttpServletRequest request) throws IOException {
-	    File jsonFile = new File(jsonFilePath);
+		File jsonFile = new File(jsonFilePath);
 
-	    if (!jsonFile.exists()) {
-	        request.setAttribute("error", "El archivo JSON no existe.");
-	        return;
-	    }
+		if (!jsonFile.exists()) {
+			request.setAttribute("error", "El archivo JSON no existe.");
+			return;
+		}
 
-	    try (FileReader fileReader = new FileReader(jsonFile)) {
-	        Gson gson = new Gson();
+		try (FileReader fileReader = new FileReader(jsonFile)) {
+			Gson gson = new Gson();
 
-	        // Leer el archivo como un objeto que contiene un array en "data"
-	        Map<String, List<Map<String, String>>> jsonData = gson.fromJson(fileReader, Map.class);
+			// Leer el archivo como un objeto que contiene un array en "data"
+			Map<String, List<Map<String, String>>> jsonData = gson.fromJson(fileReader, Map.class);
 
-	        // Extraer la lista de datos desde la clave "data"
-	        List<Map<String, String>> dataList = jsonData.get("data");
+			// Extraer la lista de datos desde la clave "data"
+			List<Map<String, String>> dataList = jsonData.get("data");
 
-	        // Pasar la lista como atributo a la JSP
-	        request.setAttribute("datosJSON", dataList);
-	    } catch (IOException e) {
-	        throw new IOException("Error al leer el archivo JSON: " + e.getMessage());
-	    }
+			// Pasar la lista como atributo a la JSP
+			request.setAttribute("datosJSON", dataList);
+		} catch (IOException e) {
+			throw new IOException("Error al leer el archivo JSON: " + e.getMessage());
+		}
 	}
 
-	public void escrituraJSON(String jsonFilePath, String dato1, String dato2, String dato3, String dato4, String dato5, String dato6, HttpServletRequest request) throws IOException {
-	    File jsonFile = new File(jsonFilePath);
+	public void escrituraJSON(String jsonFilePath, String descripcion, String tipo, String horario, String direccion,
+			String articleId, String modalidad) throws IOException {
+		File jsonFile = new File(jsonFilePath);
 
-	    // Inicializar JSONArray para almacenar la información
-	    JSONArray jsonArray = new JSONArray();
+		JSONArray jsonArray = new JSONArray();
 
-	    // Si el archivo JSON existe, leer los datos existentes
-	    if (jsonFile.exists()) {
-	        try (FileReader fileReader = new FileReader(jsonFile)) {
-	            // Leer y parsear el archivo JSON existente
-	            char[] buffer = new char[(int) jsonFile.length()];
-	            fileReader.read(buffer);
-	            String jsonContent = new String(buffer);
-	            jsonArray = new JSONArray(jsonContent); // Parsear el JSON contenido
-	        } catch (Exception e) {
-	            // Agregar más información en el mensaje de error
-	            throw new IOException("Error al leer los datos existentes en JSON: " + e.getMessage(), e);
-	        }
-	    }
+		// Leer datos existentes si el archivo existe
+		if (jsonFile.exists()) {
+			try (FileReader fileReader = new FileReader(jsonFile)) {
+				char[] buffer = new char[(int) jsonFile.length()];
+				fileReader.read(buffer);
+				String jsonContent = new String(buffer);
+				jsonArray = new JSONObject(jsonContent).getJSONArray("data");
+			} catch (Exception e) {
+				throw new IOException("Error al leer los datos existentes en JSON: " + e.getMessage(), e);
+			}
+		}
 
-	    // Crear una nueva entrada para los datos
-	    JSONObject newEntry = new JSONObject();
-	    newEntry.put("dato1", dato1);
-	    newEntry.put("dato2", dato2);
-	    newEntry.put("dato3", dato3);
-	    newEntry.put("dato4", dato4);
-	    newEntry.put("dato5", dato5);
-	    newEntry.put("dato6", dato6);
+		// Crear nuevo objeto para añadir
+		JSONObject newEntry = new JSONObject();
+		newEntry.put("descripcion", descripcion);
+		newEntry.put("tipo", tipo);
+		newEntry.put("horario", horario);
+		newEntry.put("direccion", direccion);
+		newEntry.put("articleId", articleId);
+		newEntry.put("modalidad", modalidad);
 
-	    // Agregar la nueva entrada al JSONArray
-	    jsonArray.put(newEntry);
+		// Agregar el nuevo objeto al array
+		jsonArray.put(newEntry);
 
-	    // Escribir los datos de nuevo en el archivo JSON
-	    try (FileWriter fileWriter = new FileWriter(jsonFile)) {
-	        // Escribir el JSONArray actualizado en el archivo
-	        fileWriter.write(jsonArray.toString());
-	        fileWriter.flush();
-	    } catch (IOException e) {
-	        // Agregar más información en el mensaje de error
-	        throw new IOException("Error al escribir en el archivo JSON: " + e.getMessage(), e);
-	    }
+		// Reescribir el archivo
+		try (FileWriter fileWriter = new FileWriter(jsonFile)) {
+			JSONObject finalData = new JSONObject();
+			finalData.put("data", jsonArray);
+			fileWriter.write(finalData.toString(4)); // Formateo de JSON para legibilidad
+		} catch (IOException e) {
+			throw new IOException("Error al escribir en el archivo JSON: " + e.getMessage(), e);
+		}
 	}
-
 
 	// PARTE DE GONZALO
 	// Lectura de CSV con UTF-8
