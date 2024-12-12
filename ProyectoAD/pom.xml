@@ -43,12 +43,12 @@
 			<artifactId>opencsv</artifactId>
 			<version>5.7.1</version>
 		</dependency>
-		<!-- Dependencia básica de Apache POI -->
-		<dependency>
-			<groupId>org.apache.poi</groupId>
-			<artifactId>poi</artifactId>
-			<version>5.2.3</version>
-		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.poi/poi -->
+<dependency>
+    <groupId>org.apache.poi</groupId>
+    <artifactId>poi</artifactId>
+    <version>5.2.3</version>
+</dependency>
 
 		<!-- Para trabajar con archivos .xlsx (Excel moderno) -->
 		<dependency>
