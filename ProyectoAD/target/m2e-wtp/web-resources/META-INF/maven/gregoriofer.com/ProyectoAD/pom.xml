@@ -37,6 +37,12 @@
        <version>4.8.0</version> <!-- Usa la última versión disponible -->
        <type>pom</type>
     </dependency>
+    <dependency>
+    	<groupId>com.opencsv</groupId>
+    	<artifactId>opencsv</artifactId>
+    	<version>5.7.1</version>
+    </dependency>
+    
   </dependencies>
 
   <build>
