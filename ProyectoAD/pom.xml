@@ -42,6 +42,33 @@
     	<artifactId>opencsv</artifactId>
     	<version>5.7.1</version>
     </dependency>
+    <!-- Dependencia básica de Apache POI -->
+    <dependency>
+        <groupId>org.apache.poi</groupId>
+        <artifactId>poi</artifactId>
+        <version>5.2.3</version>
+    </dependency>
+
+    <!-- Para trabajar con archivos .xlsx (Excel moderno) -->
+    <dependency>
+        <groupId>org.apache.poi</groupId>
+        <artifactId>poi-ooxml</artifactId>
+        <version>5.2.3</version>
+    </dependency>
+
+    <!-- Para trabajar con el modelo de alta fidelidad de Excel -->
+    <dependency>
+        <groupId>org.apache.poi</groupId>
+        <artifactId>poi-ooxml-schemas</artifactId>
+        <version>4.1.2</version>
+    </dependency>
+
+    <!-- Para trabajar con el formato Excel 2007 -->
+    <dependency>
+        <groupId>org.apache.xmlbeans</groupId>
+        <artifactId>xmlbeans</artifactId>
+        <version>5.1.1</version>
+    </dependency>
     
   </dependencies>
 
