@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,8 +37,17 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+
+import java.awt.Window.Type;
 import java.io.*;
 import java.util.*;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.opencsv.*;
 import com.opencsv.exceptions.CsvException;
 
@@ -94,29 +105,29 @@ public class ServletFich extends HttpServlet {
 				// Parte de Gonzalo
 				String rutaAbsolutaXLS = "C:\\Users\\delcrego\\git\\ManejodeFicheros\\ProyectoAD\\src\\main\\webapp\\eventos-deportivos-diciembre-2024.xls";
 
-			    if ("lectura".equals(accion)) {
-			        try {
-			            List<String[]> datosXLS = leerSimilXLS(rutaAbsolutaXLS);
-			            request.setAttribute("datosXLS", datosXLS);
-			            page = "AccesoDatosA.jsp";
-			        } catch (FileNotFoundException e) {
-			            request.setAttribute("errorMensaje", "El archivo XLS no se encuentra: " + e.getMessage());
-			            page = "Error.jsp";
-			        } catch (IOException e) {
-			            request.setAttribute("errorMensaje", "Error al leer el archivo XLS: " + e.getMessage());
-			            page = "Error.jsp";
-			        }
-			    } else if ("escritura".equals(accion)) {
-			        try {
-			            String[] valoresFila = { dato1, dato2, dato3, dato4, dato5, dato6 };
-			            escribirSimilXLS(rutaAbsolutaXLS, valoresFila);
-			            request.setAttribute("mensaje", "Datos escritos correctamente.");
-			            page = "TratamientoFich.jsp";
-			        } catch (IOException e) {
-			            request.setAttribute("errorMensaje", "Error al escribir en el archivo XLS: " + e.getMessage());
-			            page = "Error.jsp";
-			        }
-			    }
+				if ("lectura".equals(accion)) {
+					try {
+						List<String[]> datosXLS = leerSimilXLS(rutaAbsolutaXLS);
+						request.setAttribute("datosXLS", datosXLS);
+						page = "AccesoDatosA.jsp";
+					} catch (FileNotFoundException e) {
+						request.setAttribute("errorMensaje", "El archivo XLS no se encuentra: " + e.getMessage());
+						page = "Error.jsp";
+					} catch (IOException e) {
+						request.setAttribute("errorMensaje", "Error al leer el archivo XLS: " + e.getMessage());
+						page = "Error.jsp";
+					}
+				} else if ("escritura".equals(accion)) {
+					try {
+						String[] valoresFila = { dato1, dato2, dato3, dato4, dato5, dato6 };
+						escribirSimilXLS(rutaAbsolutaXLS, valoresFila);
+						request.setAttribute("mensaje", "Datos escritos correctamente.");
+						page = "TratamientoFich.jsp";
+					} catch (IOException e) {
+						request.setAttribute("errorMensaje", "Error al escribir en el archivo XLS: " + e.getMessage());
+						page = "Error.jsp";
+					}
+				}
 				break;
 
 			case "CSV":
@@ -124,40 +135,59 @@ public class ServletFich extends HttpServlet {
 				String csvFilePath = getServletContext().getRealPath("/micsv.csv");
 				if ("lectura".equals(accion)) {
 					leerCSV(request, response, csvFilePath);
-				}else if ("escritura".equals(accion)){
-					 insertarCSV(request, response, csvFilePath);
+				} else if ("escritura".equals(accion)) {
+					insertarCSV(request, response, csvFilePath);
 				}
 				break;
 
 			case "JSON":
 				// Parte de Serafin
-				break;
+                String jsonFilePath = getServletContext().getRealPath("/instalaciones.json");
+                if ("lectura".equals(accion)) {
+                    try {
+                        lecturaJSON(jsonFilePath, request);
+                        page = "AccesoDatosA.jsp";
+                    } catch (Exception e) {
+                        request.setAttribute("errorMensaje", "Error al leer el archivo JSON: " + e.getMessage());
+                        page = "Error.jsp";
+                    }
+                } else if ("escritura".equals(accion)) {
+                    try {
+                        escrituraJSON(jsonFilePath, dato1, dato2, dato3, dato4, dato5, dato6, request);
+                        request.setAttribute("mensaje", "Datos escritos correctamente.");
+                        page = "TratamientoFich.jsp";
+                    } catch (Exception e) {
+                        request.setAttribute("errorMensaje", "Error al escribir en el archivo JSON: " + e.getMessage());
+                        page = "Error.jsp";
+                    }
+                }
+                break;
 
 			case "XML":
 				String xmlFilePath = getServletContext().getRealPath("/mixmlLeer.xml");
 
-			    if ("lectura".equals(accion)) {
-			        try {
-			            List<Map<String, String>> listaDatos = leerDatosXML(xmlFilePath);
-			            request.setAttribute("listaDatos", listaDatos);
-			            page = "AccesoDatosA.jsp";
-			        } catch (Exception e) {
-			            page = "Error.jsp";
-			        }
-			    } else if ("escritura".equals(accion)) {
-			        try {
-			            String[] nombresElementos = { "CODIGO", "TITULO_DEL_CURSO", "DESCRIPCION_OBJETIVOS",
-			                    "REQUISITOS", "FAMILIA", "DURACION_HORAS" };
-			            String[] valoresElementos = { dato1, dato2, dato3, dato4, dato5, dato6 };
-			            String nuevoId = String.valueOf(System.currentTimeMillis() % 1000);
+				if ("lectura".equals(accion)) {
+					try {
+						List<Map<String, String>> listaDatos = leerDatosXML(xmlFilePath);
+						request.setAttribute("listaDatos", listaDatos);
+						page = "AccesoDatosA.jsp";
+					} catch (Exception e) {
+						page = "Error.jsp";
+					}
+				} else if ("escritura".equals(accion)) {
+					try {
+						String[] nombresElementos = { "CODIGO", "TITULO_DEL_CURSO", "DESCRIPCION_OBJETIVOS",
+								"REQUISITOS", "FAMILIA", "DURACION_HORAS" };
+						String[] valoresElementos = { dato1, dato2, dato3, dato4, dato5, dato6 };
+						String nuevoId = String.valueOf(System.currentTimeMillis() % 1000);
 
-			            escribirXML(xmlFilePath, nombresElementos, valoresElementos, nuevoId);
-			            page = "TratamientoFich.jsp"; // Redirige al formulario
-			        } catch (Exception e) {
-			            page = "Error.jsp";
-			        }
-			    }
-			    break;
+						escribirXML(xmlFilePath, nombresElementos, valoresElementos, nuevoId);
+						page = "TratamientoFich.jsp"; // Redirige al formulario
+					} catch (Exception e) {
+						page = "Error.jsp";
+					}
+				}
+				break;
 			}
 		}
 		// Enviar la respuesta, para que segun lo seleccionado, haga lo que se quiera
@@ -169,7 +199,8 @@ public class ServletFich extends HttpServlet {
 	// PARTE DE ALBERTO
 
 	// Metodo leer CSV
-	private void leerCSV(HttpServletRequest request, HttpServletResponse response, String filePath) throws ServletException, IOException {
+	private void leerCSV(HttpServletRequest request, HttpServletResponse response, String filePath)
+			throws ServletException, IOException {
 		List<String[]> data = new ArrayList<>();
 		try (CSVReader reader = new CSVReaderBuilder(new FileReader(filePath))
 				.withCSVParser(new CSVParserBuilder().withSeparator(';').build()).build()) {
@@ -184,87 +215,154 @@ public class ServletFich extends HttpServlet {
 	}
 
 	// Metodo insertar CSV
-    private void insertarCSV(HttpServletRequest request, HttpServletResponse response, String filePath) throws ServletException, IOException {
-        // Obtener los datos del formulario
-        String[] nuevosDatos = new String[6];
-        for (int i = 0; i < 6; i++) {
-            nuevosDatos[i] = request.getParameter("dato" + (i + 1));
-        }
+	private void insertarCSV(HttpServletRequest request, HttpServletResponse response, String filePath)
+			throws ServletException, IOException {
+		// Obtener los datos del formulario
+		String[] nuevosDatos = new String[6];
+		for (int i = 0; i < 6; i++) {
+			nuevosDatos[i] = request.getParameter("dato" + (i + 1));
+		}
 
-        // Verificar si los datos son válidos (puedes agregar más validaciones aquí)
-        boolean datosVálidos = true;
-        for (String dato : nuevosDatos) {
-            if (dato == null || dato.trim().isEmpty()) {
-                datosVálidos = false;
-                break;
-            }
-        }
+		// Verificar si los datos son válidos (puedes agregar más validaciones aquí)
+		boolean datosVálidos = true;
+		for (String dato : nuevosDatos) {
+			if (dato == null || dato.trim().isEmpty()) {
+				datosVálidos = false;
+				break;
+			}
+		}
 
-        // Si los datos son válidos, agregar al archivo CSV
-        if (datosVálidos) {
-            try (CSVWriter writer = new CSVWriter(new FileWriter(filePath, true), ';', CSVWriter.NO_QUOTE_CHARACTER,
-                    CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END)) {
-                writer.writeNext(nuevosDatos); // Escribir la nueva fila en el archivo
-                // Redirigir o reenviar con éxito
-                request.setAttribute("mensaje", "Datos añadidos correctamente.");
-            } catch (IOException e) {
-                request.setAttribute("errorMensaje", "Error al guardar los datos.");
-            }
-        } else {
-            request.setAttribute("errorMensaje", "Todos los campos son obligatorios.");
-        }
+		// Si los datos son válidos, agregar al archivo CSV
+		if (datosVálidos) {
+			try (CSVWriter writer = new CSVWriter(new FileWriter(filePath, true), ';', CSVWriter.NO_QUOTE_CHARACTER,
+					CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END)) {
+				writer.writeNext(nuevosDatos); // Escribir la nueva fila en el archivo
+				// Redirigir o reenviar con éxito
+				request.setAttribute("mensaje", "Datos añadidos correctamente.");
+			} catch (IOException e) {
+				request.setAttribute("errorMensaje", "Error al guardar los datos.");
+			}
+		} else {
+			request.setAttribute("errorMensaje", "Todos los campos son obligatorios.");
+		}
 
-        // Reenviar a la página para mostrar el mensaje
-        request.getRequestDispatcher("/TratamientoFich.jsp").forward(request, response);
-    }
+		// Reenviar a la página para mostrar el mensaje
+		request.getRequestDispatcher("/TratamientoFich.jsp").forward(request, response);
+	}
 
 	// PARTE DE SERAFIN
+	private void lecturaJSON(String jsonFilePath, HttpServletRequest request) throws IOException {
+	    File jsonFile = new File(jsonFilePath);
+
+	    if (!jsonFile.exists()) {
+	        request.setAttribute("error", "El archivo JSON no existe.");
+	        return;
+	    }
+
+	    try (FileReader fileReader = new FileReader(jsonFile)) {
+	        Gson gson = new Gson();
+
+	        // Leer el archivo como un objeto que contiene un array en "data"
+	        Map<String, List<Map<String, String>>> jsonData = gson.fromJson(fileReader, Map.class);
+
+	        // Extraer la lista de datos desde la clave "data"
+	        List<Map<String, String>> dataList = jsonData.get("data");
+
+	        // Pasar la lista como atributo a la JSP
+	        request.setAttribute("datosJSON", dataList);
+	    } catch (IOException e) {
+	        throw new IOException("Error al leer el archivo JSON: " + e.getMessage());
+	    }
+	}
+
+	public void escrituraJSON(String jsonFilePath, String dato1, String dato2, String dato3, String dato4, String dato5, String dato6, HttpServletRequest request) throws IOException {
+	    File jsonFile = new File(jsonFilePath);
+
+	    // Inicializar JSONArray para almacenar la información
+	    JSONArray jsonArray = new JSONArray();
+
+	    // Si el archivo JSON existe, leer los datos existentes
+	    if (jsonFile.exists()) {
+	        try (FileReader fileReader = new FileReader(jsonFile)) {
+	            // Leer y parsear el archivo JSON existente
+	            char[] buffer = new char[(int) jsonFile.length()];
+	            fileReader.read(buffer);
+	            String jsonContent = new String(buffer);
+	            jsonArray = new JSONArray(jsonContent); // Parsear el JSON contenido
+	        } catch (Exception e) {
+	            // Agregar más información en el mensaje de error
+	            throw new IOException("Error al leer los datos existentes en JSON: " + e.getMessage(), e);
+	        }
+	    }
+
+	    // Crear una nueva entrada para los datos
+	    JSONObject newEntry = new JSONObject();
+	    newEntry.put("dato1", dato1);
+	    newEntry.put("dato2", dato2);
+	    newEntry.put("dato3", dato3);
+	    newEntry.put("dato4", dato4);
+	    newEntry.put("dato5", dato5);
+	    newEntry.put("dato6", dato6);
+
+	    // Agregar la nueva entrada al JSONArray
+	    jsonArray.put(newEntry);
+
+	    // Escribir los datos de nuevo en el archivo JSON
+	    try (FileWriter fileWriter = new FileWriter(jsonFile)) {
+	        // Escribir el JSONArray actualizado en el archivo
+	        fileWriter.write(jsonArray.toString());
+	        fileWriter.flush();
+	    } catch (IOException e) {
+	        // Agregar más información en el mensaje de error
+	        throw new IOException("Error al escribir en el archivo JSON: " + e.getMessage(), e);
+	    }
+	}
+
 
 	// PARTE DE GONZALO
- // Lectura de CSV con UTF-8
-    private List<String[]> leerSimilXLS(String rutaArchivo) throws IOException {
-        List<String[]> datos = new ArrayList<>();
-        File archivo = new File(rutaArchivo);
+	// Lectura de CSV con UTF-8
+	private List<String[]> leerSimilXLS(String rutaArchivo) throws IOException {
+		List<String[]> datos = new ArrayList<>();
+		File archivo = new File(rutaArchivo);
 
-        if (!archivo.exists()) {
-            throw new FileNotFoundException("El archivo no existe en la ruta especificada: " + rutaArchivo);
-        }
+		if (!archivo.exists()) {
+			throw new FileNotFoundException("El archivo no existe en la ruta especificada: " + rutaArchivo);
+		}
 
-        // Usar InputStreamReader con UTF-8 para leer correctamente los caracteres
-        try (BufferedReader lector = new BufferedReader(new InputStreamReader(new FileInputStream(archivo), "UTF-8"))) {
-            String linea;
-            while ((linea = lector.readLine()) != null) {
-                String[] fila = linea.split(";");  // Separar por punto y coma, adaptando a CSV
-                datos.add(fila);
-            }
-        }
+		// Usar InputStreamReader con UTF-8 para leer correctamente los caracteres
+		try (BufferedReader lector = new BufferedReader(new InputStreamReader(new FileInputStream(archivo), "UTF-8"))) {
+			String linea;
+			while ((linea = lector.readLine()) != null) {
+				String[] fila = linea.split(";"); // Separar por punto y coma, adaptando a CSV
+				datos.add(fila);
+			}
+		}
 
-        return datos;
-    }
+		return datos;
+	}
 
- // Escritura en archivo CSV con UTF-8
-    private void escribirSimilXLS(String rutaArchivo, String[] valoresFila) throws IOException {
-        File archivo = new File(rutaArchivo);
+	// Escritura en archivo CSV con UTF-8
+	private void escribirSimilXLS(String rutaArchivo, String[] valoresFila) throws IOException {
+		File archivo = new File(rutaArchivo);
 
-        // Crear archivo si no existe
-        if (!archivo.exists()) {
-            archivo.createNewFile();
-        }
+		// Crear archivo si no existe
+		if (!archivo.exists()) {
+			archivo.createNewFile();
+		}
 
-        try (BufferedWriter escritor = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(archivo, true), "UTF-8"))) {
-            StringBuilder linea = new StringBuilder();
-            for (int i = 0; i < valoresFila.length; i++) {
-                linea.append(valoresFila[i]);
-                if (i < valoresFila.length - 1) {
-                    linea.append(";");  // Separar con punto y coma
-                }
-            }
-            escritor.write(linea.toString());
-            escritor.newLine();  // Nueva línea para el próximo registro
-        }
-    }
-
-
+		try (BufferedWriter escritor = new BufferedWriter(
+				new OutputStreamWriter(new FileOutputStream(archivo, true), "UTF-8"))) {
+			StringBuilder linea = new StringBuilder();
+			for (int i = 0; i < valoresFila.length; i++) {
+				linea.append(valoresFila[i]);
+				if (i < valoresFila.length - 1) {
+					linea.append(";"); // Separar con punto y coma
+				}
+			}
+			escritor.write(linea.toString());
+			escritor.newLine(); // Nueva línea para el próximo registro
+		}
+	}
 
 	// PARTE DE LUCAS
 	private void escribirRDF() {
