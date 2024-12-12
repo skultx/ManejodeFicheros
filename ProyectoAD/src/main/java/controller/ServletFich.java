@@ -1,6 +1,7 @@
 package controller;
 
 import jakarta.servlet.RequestDispatcher;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -10,8 +11,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,16 +36,17 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
-import java.awt.Window.Type;
 import java.io.*;
 import java.util.*;
+<<<<<<< HEAD
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+=======
+>>>>>>> branch 'main' of https://github.com/skultx/ManejodeFicheros.git
 import com.opencsv.*;
 import com.opencsv.exceptions.CsvException;
 
@@ -54,6 +54,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.VCARD;
+
 
 /**
  * Servlet implementation class ServletFich
@@ -78,6 +79,10 @@ public class ServletFich extends HttpServlet {
 			throws ServletException, IOException {
 		String respuesta = "";
 		String page = "";
+		
+		response.setCharacterEncoding("UTF-8");
+		request.setCharacterEncoding("UTF-8");
+
 
 		// Obtener el formato, la accion y los datos del formulario
 		String formatoFichero = request.getParameter("opciones");
@@ -102,31 +107,41 @@ public class ServletFich extends HttpServlet {
 
 			case "XLS":
 				// Parte de Gonzalo
-				String rutaAbsolutaXLS = "C:\\Users\\delcrego\\git\\ManejodeFicheros\\ProyectoAD\\src\\main\\webapp\\eventos-deportivos-diciembre-2024.xls";
+				String rutaAbsolutaXLS = getServletContext().getRealPath("/eventos-deportivos-diciembre-2024.xls");
 
-				if ("lectura".equals(accion)) {
-					try {
-						List<String[]> datosXLS = leerSimilXLS(rutaAbsolutaXLS);
-						request.setAttribute("datosXLS", datosXLS);
-						page = "AccesoDatosA.jsp";
-					} catch (FileNotFoundException e) {
-						request.setAttribute("errorMensaje", "El archivo XLS no se encuentra: " + e.getMessage());
-						page = "Error.jsp";
-					} catch (IOException e) {
-						request.setAttribute("errorMensaje", "Error al leer el archivo XLS: " + e.getMessage());
-						page = "Error.jsp";
-					}
-				} else if ("escritura".equals(accion)) {
-					try {
-						String[] valoresFila = { dato1, dato2, dato3, dato4, dato5, dato6 };
-						escribirSimilXLS(rutaAbsolutaXLS, valoresFila);
-						request.setAttribute("mensaje", "Datos escritos correctamente.");
-						page = "TratamientoFich.jsp";
-					} catch (IOException e) {
-						request.setAttribute("errorMensaje", "Error al escribir en el archivo XLS: " + e.getMessage());
-						page = "Error.jsp";
-					}
-				}
+			    if ("lectura".equals(accion)) {
+			        try {
+			            // Leer el archivo XLS
+			            List<String[]> datosXLS = leerSimilXLS(rutaAbsolutaXLS);
+			            
+			            // Enviar los datos al JSP como atributo
+			            request.setAttribute("datosXLS", datosXLS);
+			            
+			            // Redirigir a la página JSP
+			            page = "AccesoDatosA.jsp";
+			        } catch (FileNotFoundException e) {
+			            request.setAttribute("errorMensaje", "El archivo XLS no se encuentra: " + e.getMessage());
+			            page = "Error.jsp";
+			        } catch (IOException e) {
+			            request.setAttribute("errorMensaje", "Error al leer el archivo XLS: " + e.getMessage());
+			            page = "Error.jsp";
+			        }
+			    } else if ("escritura".equals(accion)) {
+			        try {
+			            // Obtener los valores del formulario
+			            String[] valoresFila = { dato1, dato2, dato3, dato4, dato5, dato6 };
+			            
+			            // Escribir los datos en el archivo XLS
+			            escribirSimilXLS(rutaAbsolutaXLS, valoresFila);
+			            
+			            // Mensaje de éxito
+			            request.setAttribute("mensaje", "Datos escritos correctamente.");
+			            page = "TratamientoFich.jsp";
+			        } catch (IOException e) {
+			            request.setAttribute("errorMensaje", "Error al escribir en el archivo XLS: " + e.getMessage());
+			            page = "Error.jsp";
+			        }
+			    }
 				break;
 
 			case "CSV":
@@ -141,6 +156,7 @@ public class ServletFich extends HttpServlet {
 
 			case "JSON":
 				// Parte de Serafin
+<<<<<<< HEAD
 				String jsonFilePath = getServletContext().getRealPath("/instalaciones.json");
 				if ("lectura".equals(accion)) {
 					try {
@@ -160,32 +176,34 @@ public class ServletFich extends HttpServlet {
 						page = "Error.jsp";
 					}
 				}
+=======
+>>>>>>> branch 'main' of https://github.com/skultx/ManejodeFicheros.git
 				break;
 
 			case "XML":
-				String xmlFilePath = getServletContext().getRealPath("/mixmlLeer.xml");
+				 String xmlFilePath = getServletContext().getRealPath("/mixmlLeer.xml");
 
-				if ("lectura".equals(accion)) {
-					try {
-						List<Map<String, String>> listaDatos = leerDatosXML(xmlFilePath);
-						request.setAttribute("listaDatos", listaDatos);
-						page = "AccesoDatosA.jsp";
-					} catch (Exception e) {
-						page = "Error.jsp";
-					}
-				} else if ("escritura".equals(accion)) {
-					try {
-						String[] nombresElementos = { "CODIGO", "TITULO_DEL_CURSO", "DESCRIPCION_OBJETIVOS",
-								"REQUISITOS", "FAMILIA", "DURACION_HORAS" };
-						String[] valoresElementos = { dato1, dato2, dato3, dato4, dato5, dato6 };
-						String nuevoId = String.valueOf(System.currentTimeMillis() % 1000);
+	                if ("lectura".equals(accion)) {
+	                    try {
+	                        List<Map<String, String>> listaDatos = leerDatosXML(xmlFilePath);
+	                        request.setAttribute("listaDatos", listaDatos);
+	                        page = "AccesoDatosA.jsp";
+	                    } catch (Exception e) {
+	                        page = "Error.jsp";
+	                    }
+	                } else if ("escritura".equals(accion)) {
+	                    try {
+	                        String[] nombresElementos = { "CODIGO", "TITULO_DEL_CURSO", "DESCRIPCION_OBJETIVOS",
+	                                "REQUISITOS", "FAMILIA", "DURACION_HORAS" };
+	                        String[] valoresElementos = { dato1, dato2, dato3, dato4, dato5, dato6 };
+	                        String nuevoId = String.valueOf(System.currentTimeMillis() % 1000);
 
-						escribirXML(xmlFilePath, nombresElementos, valoresElementos, nuevoId);
-						page = "TratamientoFich.jsp"; // Redirige al formulario
-					} catch (Exception e) {
-						page = "Error.jsp";
-					}
-				}
+	                        escribirXML(xmlFilePath, nombresElementos, valoresElementos, nuevoId);
+	                        page = "TratamientoFich.jsp"; // Redirige al formulario
+	                    } catch (Exception e) {
+	                        page = "Error.jsp";
+	                    }
+	                }
 				break;
 			}
 		}
@@ -250,14 +268,29 @@ public class ServletFich extends HttpServlet {
 	}
 
 	// PARTE DE SERAFIN
+<<<<<<< HEAD
 	private void lecturaJSON(String jsonFilePath, HttpServletRequest request) throws IOException {
 		File jsonFile = new File(jsonFilePath);
+=======
+>>>>>>> branch 'main' of https://github.com/skultx/ManejodeFicheros.git
 
+<<<<<<< HEAD
 		if (!jsonFile.exists()) {
 			request.setAttribute("error", "El archivo JSON no existe.");
 			return;
 		}
+=======
+	// PARTE DE GONZALO
+	private List<String[]> leerSimilXLS(String rutaArchivo) throws IOException {
+	    List<String[]> datos = new ArrayList<>();
+	    File archivo = new File(rutaArchivo);
 
+	    if (!archivo.exists()) {
+	        throw new FileNotFoundException("El archivo no existe en la ruta especificada: " + rutaArchivo);
+	    }
+>>>>>>> branch 'main' of https://github.com/skultx/ManejodeFicheros.git
+
+<<<<<<< HEAD
 		try (FileReader fileReader = new FileReader(jsonFile)) {
 			Gson gson = new Gson();
 
@@ -272,14 +305,34 @@ public class ServletFich extends HttpServlet {
 		} catch (IOException e) {
 			throw new IOException("Error al leer el archivo JSON: " + e.getMessage());
 		}
+=======
+	    // Leer el archivo como texto estructurado (simulación de CSV)
+	    try (BufferedReader lector = new BufferedReader(new InputStreamReader(new FileInputStream(archivo), "UTF-8"))) {
+	        String linea;
+	        while ((linea = lector.readLine()) != null) {
+	            String[] fila = linea.split(";"); // Suponiendo que los datos están separados por punto y coma
+	            datos.add(fila);
+	        }
+	    }
+	    return datos;
+>>>>>>> branch 'main' of https://github.com/skultx/ManejodeFicheros.git
 	}
 
+<<<<<<< HEAD
 	public void escrituraJSON(String jsonFilePath, String descripcion, String tipo, String horario, String direccion,
 			String articleId, String modalidad) throws IOException {
 		File jsonFile = new File(jsonFilePath);
+=======
+>>>>>>> branch 'main' of https://github.com/skultx/ManejodeFicheros.git
 
+<<<<<<< HEAD
 		JSONArray jsonArray = new JSONArray();
+=======
+	private void escribirSimilXLS(String rutaArchivo, String[] valoresFila) throws IOException {
+	    File archivo = new File(rutaArchivo);
+>>>>>>> branch 'main' of https://github.com/skultx/ManejodeFicheros.git
 
+<<<<<<< HEAD
 		// Leer datos existentes si el archivo existe
 		if (jsonFile.exists()) {
 			try (FileReader fileReader = new FileReader(jsonFile)) {
@@ -291,7 +344,16 @@ public class ServletFich extends HttpServlet {
 				throw new IOException("Error al leer los datos existentes en JSON: " + e.getMessage(), e);
 			}
 		}
+=======
+	    // Crear el archivo si no existe
+	    if (!archivo.exists()) {
+	        if (!archivo.createNewFile()) {
+	            throw new IOException("No se pudo crear el archivo: " + rutaArchivo);
+	        }
+	    }
+>>>>>>> branch 'main' of https://github.com/skultx/ManejodeFicheros.git
 
+<<<<<<< HEAD
 		// Crear nuevo objeto para añadir
 		JSONObject newEntry = new JSONObject();
 		newEntry.put("descripcion", descripcion);
@@ -312,8 +374,26 @@ public class ServletFich extends HttpServlet {
 		} catch (IOException e) {
 			throw new IOException("Error al escribir en el archivo JSON: " + e.getMessage(), e);
 		}
+=======
+	    // Escribir en el archivo
+	    try (BufferedWriter escritor = new BufferedWriter(
+	            new OutputStreamWriter(new FileOutputStream(archivo, true), "UTF-8"))) {
+	        StringBuilder linea = new StringBuilder();
+	        for (int i = 0; i < valoresFila.length; i++) {
+	            linea.append(valoresFila[i]);
+	            if (i < valoresFila.length - 1) {
+	                linea.append(";"); // Separar columnas con punto y coma
+	            }
+	        }
+	        escritor.write(linea.toString());
+	        escritor.newLine(); // Agregar una nueva línea después de cada fila
+	    } catch (IOException e) {
+	        throw new IOException("Error al escribir en el archivo: " + rutaArchivo, e);
+	    }
+>>>>>>> branch 'main' of https://github.com/skultx/ManejodeFicheros.git
 	}
 
+<<<<<<< HEAD
 	// PARTE DE GONZALO
 	// Lectura de CSV con UTF-8
 	private List<String[]> leerSimilXLS(String rutaArchivo) throws IOException {
@@ -358,6 +438,8 @@ public class ServletFich extends HttpServlet {
 			escritor.newLine(); // Nueva línea para el próximo registro
 		}
 	}
+=======
+>>>>>>> branch 'main' of https://github.com/skultx/ManejodeFicheros.git
 
 	// PARTE DE LUCAS
 	private void escribirRDF() {
