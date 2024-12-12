@@ -21,6 +21,9 @@ List<String[]> datosXLS = (List<String[]>) request.getAttribute("datosXLS");
 
 //Para JSON
 List<Map<String, String>> datosJSON = (List<Map<String, String>>) request.getAttribute("datosJSON");
+
+//Para RDF
+List<List<String>> rdfData = (List<List<String>>) request.getAttribute("rdfData");
 %>
 <html>
 <head>
@@ -126,11 +129,35 @@ List<Map<String, String>> datosJSON = (List<Map<String, String>>) request.getAtt
                 <% } %>
             </tbody>
         </table>
-
-    <% } else if ("RDF".equals(formatoFichero)) { %>
-        <h2>Datos RDF</h2>
-        <p>Procesamiento de datos RDF pendiente de implementación.</p>
-
+		<%
+        } else if ("RDF".equals(formatoFichero)) {
+    %>
+    <h2>Datos RDF</h2>
+    <%
+        if (rdfData != null && !rdfData.isEmpty()) {
+            List<String> subjects = rdfData.get(0);
+            List<String> predicates = rdfData.get(1);
+            List<String> objects = rdfData.get(2);
+    %>
+    <table border="1">
+        <tr>
+            <th>Subject</th>
+            <th>Predicate</th>
+            <th>Object</th>
+        </tr>
+        <%
+            for (int i = 0; i < subjects.size(); i++) {
+        %>
+        <tr>
+            <td><%= subjects.get(i) %></td>
+            <td><%= predicates.get(i) %></td>
+            <td><%= objects.get(i) %></td>
+        </tr>
+        <%
+            }
+        %>
+    </table>
+    <%} %>
     <% } else { %>
         <p>No hay datos disponibles o el formato seleccionado no es válido.</p>
     <% } %>

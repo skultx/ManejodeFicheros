@@ -13,11 +13,6 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -97,7 +92,16 @@ public class ServletFich extends HttpServlet {
 			// Procesar según el tipo de fichero seleccionado
 			switch (formatoFichero) {
 			case "RDF":
-				// Parte de Lucas
+				if("lectura".equals(accion)) {
+        			leerRDF(getServletContext().getRealPath("/rdf.rdf"), request);
+        			request.getRequestDispatcher("/AccesoDatosA.jsp").forward(request, response);
+        		} else if ("escritura".equals(accion)){
+        			escribirRDF(dato1, dato2, dato3, dato4, dato5, dato6, getServletContext().getRealPath("rdf.rdf"));
+        			leerRDF(getServletContext().getRealPath("/rdf.rdf"), request);
+        			request.getRequestDispatcher("/TratamientoFich.jsp").forward(request, response);
+        		}
+				
+	
 				break;
 
 			case "XLS":
@@ -375,103 +379,75 @@ public class ServletFich extends HttpServlet {
 
 
 	// PARTE DE LUCAS
-	private void escribirRDF() {
-		Scanner scanner = new Scanner(System.in);
+	public void escribirRDF(String name, String age, String email, String url, String friendName, String friendUrl, String rdfFilePath) {
+	    try {
+	        // Cargar o crear un modelo RDF
+	        Model model = ModelFactory.createDefaultModel();
+	        File rdfFile = new File(rdfFilePath);
+	        model.read(new FileInputStream(rdfFile), null);
+	        
+	        
+	        // Crear las descripciones
+	        Resource person = model.createResource(url)
+	                .addProperty(VCARD.FN, name)
+	                .addProperty(model.createProperty("http://xmlns.com/foaf/0.1/age"), age)
+	                .addProperty(VCARD.EMAIL, email);
 
-		// Pedir los 6 datos
-		System.out.print("Introduce el nombre: ");
-		String name = scanner.nextLine();
+	        Resource friend = model.createResource(friendUrl)
+	                .addProperty(VCARD.FN, friendName);
 
-		System.out.print("Introduce la edad: ");
-		String age = scanner.nextLine();
+	        person.addProperty(model.createProperty("http://xmlns.com/foaf/0.1/knows"), friend);
 
-		System.out.print("Introduce el correo electrónico: ");
-		String email = scanner.nextLine();
+	        // Guardar los cambios en el archivo RDF
+	        try (FileOutputStream out = new FileOutputStream(rdfFile)) {
+	            model.write(out, "RDF/XML");
+	        }
+	    } catch (IOException e) {
+	        System.err.println("Error al leer o escribir el archivo RDF: " + e.getMessage());
+	    }
+	}
+    
 
-		System.out.print("Introduce la URL única del recurso: ");
-		String url = scanner.nextLine();
+	private void leerRDF(String rdfFilePath, HttpServletRequest request) {
+	    List<String> subjects = new ArrayList<>();
+	    List<String> predicates = new ArrayList<>();
+	    List<String> objects = new ArrayList<>();
+	    
+	    File rdfFile = new File(rdfFilePath);
 
-		System.out.print("Introduce el nombre de alguien que conozca: ");
-		String friendName = scanner.nextLine();
+	    // Verificar si el archivo existe
+	    if (!rdfFile.exists()) {
+	        System.err.println("El archivo RDF no existe: " + rdfFilePath);
+	        request.setAttribute("rdfData", Arrays.asList(subjects, predicates, objects));
+	        return;
+	    }
 
-		System.out.print("Introduce la URL única del amigo: ");
-		String friendUrl = scanner.nextLine();
+	    try {
+	        // Crear un modelo RDF
+	        Model model = ModelFactory.createDefaultModel();
+	        // Leer el archivo RDF
+	        model.read(new FileInputStream(rdfFile), null);
 
-		// Pedir la ubicación del archivo RDF
-		System.out.println("Introduce la ubicación del archivo RDF:");
-		String rdfFilePath = scanner.nextLine();
+	        // Iterar por todos los triples y almacenarlos en las listas
+	        StmtIterator iter = model.listStatements();
+	        while (iter.hasNext()) {
+	            Statement stmt = iter.nextStatement();
+	            String subject = stmt.getSubject().toString();
+	            String predicate = stmt.getPredicate().toString();
+	            String object = stmt.getObject().toString();
 
-		try {
-			// Cargar o crear un modelo RDF
-			Model model = ModelFactory.createDefaultModel();
-			File rdfFile = new File(rdfFilePath);
-			if (rdfFile.exists()) {
-				model.read(new FileInputStream(rdfFile), null);
-			} else {
-				// Añadir prefijos al modelo si el archivo no existe
-				model.setNsPrefix("vcard", VCARD.getURI());
-				model.setNsPrefix("foaf", "http://xmlns.com/foaf/0.1/");
-			}
+	            subjects.add(subject);
+	            predicates.add(predicate);
+	            objects.add(object);
+	        }
 
-			// Crear las descripciones
-			Resource person = model.createResource(url).addProperty(VCARD.FN, name)
-					.addProperty(model.createProperty("http://xmlns.com/foaf/0.1/age"), age)
-					.addProperty(VCARD.EMAIL, email);
+	    } catch (IOException e) {
+	        System.err.println("Error al leer el archivo RDF: " + e.getMessage());
+	    }
 
-			Resource friend = model.createResource(friendUrl).addProperty(VCARD.FN, friendName);
-
-			person.addProperty(model.createProperty("http://xmlns.com/foaf/0.1/knows"), friend);
-
-			// Guardar los cambios en el archivo RDF con el encabezado XML
-			try (FileOutputStream out = new FileOutputStream(rdfFile)) {
-				// Escribe manualmente la declaración XML antes del modelo RDF
-				out.write("<?xml version=\"1.0\"?>\n".getBytes());
-				model.write(out, "RDF/XML");
-			}
-
-			System.out.println("Datos añadidos correctamente al archivo RDF.");
-		} catch (IOException e) {
-			System.err.println("Error al leer o escribir el archivo RDF: " + e.getMessage());
-		}
+	    request.setAttribute("rdfData", Arrays.asList(subjects, predicates, objects));
 	}
 
-	private void leerRDF() {
-		// Ruta del archivo RDF
-		System.out.println("Introduce la ubicación del archivo RDF:");
-		String rdfFilePath = new java.util.Scanner(System.in).nextLine();
-
-		File rdfFile = new File(rdfFilePath);
-
-		// Verificar si el archivo existe
-		if (!rdfFile.exists()) {
-			System.err.println("El archivo RDF no existe: " + rdfFilePath);
-			return;
-		}
-
-		try {
-			// Crear un modelo RDF
-			Model model = ModelFactory.createDefaultModel();
-			// Leer el archivo RDF
-			model.read(new FileInputStream(rdfFile), null);
-
-			// Iterar por todos los triples y mostrarlos
-			StmtIterator iter = model.listStatements();
-			while (iter.hasNext()) {
-				Statement stmt = iter.nextStatement();
-				String subject = stmt.getSubject().toString();
-				String predicate = stmt.getPredicate().toString();
-				String object = stmt.getObject().toString();
-
-				System.out.println("Subject: " + subject);
-				System.out.println("Predicate: " + predicate);
-				System.out.println("Object: " + object);
-				System.out.println("----------------------------------------------------");
-			}
-
-		} catch (IOException e) {
-			System.err.println("Error al leer el archivo RDF: " + e.getMessage());
-		}
-	}
 
 	// PARTE DE ALEJANDRO
 	// Para la lectura
