@@ -264,39 +264,6 @@ public class ServletFich extends HttpServlet {
         }
     }
 
- // Método para leer un archivo XLS (con Apache POI)
-    private List<String[]> leerXLS(String rutaArchivo) throws IOException {
-        List<String[]> datos = new ArrayList<>();
-        
-        try (FileInputStream archivo = new FileInputStream(rutaArchivo)) {
-            Workbook workbook = WorkbookFactory.create(archivo);  // Cargar el archivo Excel
-            Sheet sheet = workbook.getSheetAt(0);  // Leer la primera hoja
-
-            for (Row row : sheet) {
-                String[] fila = new String[row.getPhysicalNumberOfCells()];
-                int i = 0;
-                for (Cell cell : row) {
-                    switch (cell.getCellType()) {
-                        case STRING:
-                            fila[i] = cell.getStringCellValue();  // Leer como String
-                            break;
-                        case NUMERIC:
-                            fila[i] = String.valueOf(cell.getNumericCellValue());  // Leer como número
-                            break;
-                        case BOOLEAN:
-                            fila[i] = String.valueOf(cell.getBooleanCellValue());  // Leer como booleano
-                            break;
-                        default:
-                            fila[i] = "";  // Celda vacía o desconocida
-                    }
-                    i++;
-                }
-                datos.add(fila);
-            }
-        }
-        return datos;
-    }
-
 
 
 	// PARTE DE LUCAS
