@@ -16,7 +16,7 @@ List<String[]> dataCSV = (List<String[]>) request.getAttribute("data");
 // Para XML
 List<Map<String, String>> listaDatosXML = (List<Map<String, String>>) request.getAttribute("listaDatos");
 
-// Recuperar la opción de formato seleccionada
+// Para XLS
 List<String[]> datosXLS = (List<String[]>) request.getAttribute("datosXLS");
 
 //Para JSON

@@ -20,11 +20,11 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.vocabulary.VCARD;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.sl.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -38,23 +38,14 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import java.awt.Window.Type;
-import java.io.*;
 import java.util.*;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.github.jsonldjava.shaded.com.google.common.collect.Table.Cell;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.opencsv.*;
 import com.opencsv.exceptions.CsvException;
-
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.vocabulary.VCARD;
 
 /**
  * Servlet implementation class ServletFich
@@ -77,143 +68,138 @@ public class ServletFich extends HttpServlet {
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		String respuesta = "";
-		String page = "";
+		try {
+			String respuesta = "";
+			String page = "";
 
-		// Obtener el formato, la accion y los datos del formulario
-		String formatoFichero = request.getParameter("opciones");
-		String accion = request.getParameter("accion");
-		String dato1 = request.getParameter("dato1");
-		String dato2 = request.getParameter("dato2");
-		String dato3 = request.getParameter("dato3");
-		String dato4 = request.getParameter("dato4");
-		String dato5 = request.getParameter("dato5");
-		String dato6 = request.getParameter("dato6");
+			// Obtener el formato, la accion y los datos del formulario
+			String formatoFichero = request.getParameter("opciones");
+			String accion = request.getParameter("accion");
+			String dato1 = request.getParameter("dato1");
+			String dato2 = request.getParameter("dato2");
+			String dato3 = request.getParameter("dato3");
+			String dato4 = request.getParameter("dato4");
+			String dato5 = request.getParameter("dato5");
+			String dato6 = request.getParameter("dato6");
 
-		if ("escritura".equals(accion) && (dato1.isBlank() || dato2.isBlank() || dato3.isBlank() || dato4.isBlank()
-				|| dato5.isBlank() || dato6.isBlank())) {
-			respuesta = "(*) Todos los campos son obligatorios";
-			page = "TratamientoFich.jsp";
-		} else {
-			// Procesar según el tipo de fichero seleccionado
-			switch (formatoFichero) {
-			case "RDF":
-				if("lectura".equals(accion)) {
-        			leerRDF(getServletContext().getRealPath("/rdf.rdf"), request);
-        			request.getRequestDispatcher("/AccesoDatosA.jsp").forward(request, response);
-        		} else if ("escritura".equals(accion)){
-        			escribirRDF(dato1, dato2, dato3, dato4, dato5, dato6, getServletContext().getRealPath("rdf.rdf"));
-        			leerRDF(getServletContext().getRealPath("/rdf.rdf"), request);
-        			request.getRequestDispatcher("/TratamientoFich.jsp").forward(request, response);
-        		}
-				
-	
-				break;
+			if ("escritura".equals(accion) && (dato1.isBlank() || dato2.isBlank() || dato3.isBlank() || dato4.isBlank()
+					|| dato5.isBlank() || dato6.isBlank())) {
+				respuesta = "(*) Todos los campos son obligatorios";
+				page = "TratamientoFich.jsp";
+			} else {
+				// Procesar según el tipo de fichero seleccionado
+				switch (formatoFichero) {
+				case "RDF":
+					if ("lectura".equals(accion)) {
+						leerRDF(getServletContext().getRealPath("/rdf.rdf"), request);
+						request.getRequestDispatcher("/AccesoDatosA.jsp").forward(request, response);
+					} else if ("escritura".equals(accion)) {
+						escribirRDF(dato1, dato2, dato3, dato4, dato5, dato6,
+								getServletContext().getRealPath("rdf.rdf"));
+						leerRDF(getServletContext().getRealPath("/rdf.rdf"), request);
+						request.getRequestDispatcher("/TratamientoFich.jsp").forward(request, response);
+					}
 
-			case "XLS":
-				// Parte de Gonzalo
-				 String rutaAbsolutaXLS = getServletContext().getRealPath("/eventos-deportivos-diciembre-2024.xls");
+					break;
 
-				    if ("lectura".equals(accion)) {
-				        try {
-				            // Leer el archivo XLS
-				            List<String[]> datosXLS = leerSimilXLS(rutaAbsolutaXLS);
-				            
-				            // Enviar los datos al JSP como atributo
-				            request.setAttribute("datosXLS", datosXLS);
-				            
-				            // Redirigir a la página JSP
-				            page = "AccesoDatosA.jsp";
-				        } catch (FileNotFoundException e) {
-				            request.setAttribute("errorMensaje", "El archivo XLS no se encuentra: " + e.getMessage());
-				            page = "Error.jsp";
-				        } catch (IOException e) {
-				            request.setAttribute("errorMensaje", "Error al leer el archivo XLS: " + e.getMessage());
-				            page = "Error.jsp";
-				        }
-				    } else if ("escritura".equals(accion)) {
-				        try {
-				            // Obtener los valores del formulario
-				            String[] valoresFila = { dato1, dato2, dato3, dato4, dato5, dato6 };
-				            
-				            // Escribir los datos en el archivo XLS
-				            escribirSimilXLS(rutaAbsolutaXLS, valoresFila);
-				            
-				            // Mensaje de éxito
-				            request.setAttribute("mensaje", "Datos escritos correctamente.");
-				            page = "TratamientoFich.jsp";
-				        } catch (IOException e) {
-				            request.setAttribute("errorMensaje", "Error al escribir en el archivo XLS: " + e.getMessage());
-				            page = "Error.jsp";
-				        }
-				    }
+				case "XLS":
+					// Parte de Gonzalo
+					String rutaAbsolutaXLS = getServletContext().getRealPath("/eventos-deportivos-diciembre-2024.xls");
 
-				break;
+					if ("lectura".equals(accion)) {
+						try {
+							List<String[]> datosXLS = leerXLS(rutaAbsolutaXLS);
+							request.setAttribute("datosXLS", datosXLS);
+							page = "AccesoDatosA.jsp";
+						} catch (Exception e) {
+							request.setAttribute("errorMensaje", "Error al procesar el archivo XLS: " + e.getMessage());
+							page = "Error.jsp";
+						}
+					} else if ("escritura".equals(accion)) {
+						try {
+							String[] valoresFila = { dato1, dato2, dato3, dato4, dato5, dato6 };
+							escribirXLS(rutaAbsolutaXLS, valoresFila);
+							request.setAttribute("mensaje", "Datos escritos correctamente.");
+							page = "TratamientoFich.jsp";
+						} catch (Exception e) {
+							request.setAttribute("errorMensaje", "Error al procesar el archivo XLS: " + e.getMessage());
+							page = "Error.jsp";
+						}
+					}
 
-			case "CSV":
-				// Parte de Alberto
-				String csvFilePath = getServletContext().getRealPath("/micsv.csv");
-				if ("lectura".equals(accion)) {
-					leerCSV(request, response, csvFilePath);
-				} else if ("escritura".equals(accion)) {
-					insertarCSV(request, response, csvFilePath);
+					break;
+
+				case "CSV":
+					// Parte de Alberto
+					String csvFilePath = getServletContext().getRealPath("/micsv.csv");
+					if ("lectura".equals(accion)) {
+						leerCSV(request, response, csvFilePath);
+					} else if ("escritura".equals(accion)) {
+						insertarCSV(request, response, csvFilePath);
+					}
+					break;
+
+				case "JSON":
+					// Parte de Serafin
+					String jsonFilePath = getServletContext().getRealPath("/instalaciones.json");
+					if ("lectura".equals(accion)) {
+						try {
+							lecturaJSON(jsonFilePath, request);
+							page = "AccesoDatosA.jsp";
+						} catch (Exception e) {
+							request.setAttribute("errorMensaje", "Error al leer el archivo JSON: " + e.getMessage());
+							page = "Error.jsp";
+						}
+					} else if ("escritura".equals(accion)) {
+						try {
+							escrituraJSON(jsonFilePath, dato1, dato2, dato3, dato4, dato5, dato6);
+							request.setAttribute("mensaje", "Datos escritos correctamente.");
+							page = "TratamientoFich.jsp";
+						} catch (Exception e) {
+							request.setAttribute("errorMensaje",
+									"Error al escribir en el archivo JSON: " + e.getMessage());
+							page = "Error.jsp";
+						}
+					}
+					break;
+
+				case "XML":
+					String xmlFilePath = getServletContext().getRealPath("/mixmlLeer.xml");
+
+					if ("lectura".equals(accion)) {
+						try {
+							List<Map<String, String>> listaDatos = leerDatosXML(xmlFilePath);
+							request.setAttribute("listaDatos", listaDatos);
+							page = "AccesoDatosA.jsp";
+						} catch (Exception e) {
+							page = "Error.jsp";
+						}
+					} else if ("escritura".equals(accion)) {
+						try {
+							String[] nombresElementos = { "CODIGO", "TITULO_DEL_CURSO", "DESCRIPCION_OBJETIVOS",
+									"REQUISITOS", "FAMILIA", "DURACION_HORAS" };
+							String[] valoresElementos = { dato1, dato2, dato3, dato4, dato5, dato6 };
+							String nuevoId = String.valueOf(System.currentTimeMillis() % 1000);
+
+							escribirXML(xmlFilePath, nombresElementos, valoresElementos, nuevoId);
+							page = "TratamientoFich.jsp"; // Redirige al formulario
+						} catch (Exception e) {
+							page = "Error.jsp";
+						}
+					}
+					break;
 				}
-				break;
-
-			case "JSON":
-				// Parte de Serafin
-				String jsonFilePath = getServletContext().getRealPath("/instalaciones.json");
-				if ("lectura".equals(accion)) {
-					try {
-						lecturaJSON(jsonFilePath, request);
-						page = "AccesoDatosA.jsp";
-					} catch (Exception e) {
-						request.setAttribute("errorMensaje", "Error al leer el archivo JSON: " + e.getMessage());
-						page = "Error.jsp";
-					}
-				} else if ("escritura".equals(accion)) {
-					try {
-						escrituraJSON(jsonFilePath, dato1, dato2, dato3, dato4, dato5, dato6);
-						request.setAttribute("mensaje", "Datos escritos correctamente.");
-						page = "TratamientoFich.jsp";
-					} catch (Exception e) {
-						request.setAttribute("errorMensaje", "Error al escribir en el archivo JSON: " + e.getMessage());
-						page = "Error.jsp";
-					}
-				}
-				break;
-
-			case "XML":
-				String xmlFilePath = getServletContext().getRealPath("/mixmlLeer.xml");
-
-				if ("lectura".equals(accion)) {
-					try {
-						List<Map<String, String>> listaDatos = leerDatosXML(xmlFilePath);
-						request.setAttribute("listaDatos", listaDatos);
-						page = "AccesoDatosA.jsp";
-					} catch (Exception e) {
-						page = "Error.jsp";
-					}
-				} else if ("escritura".equals(accion)) {
-					try {
-						String[] nombresElementos = { "CODIGO", "TITULO_DEL_CURSO", "DESCRIPCION_OBJETIVOS",
-								"REQUISITOS", "FAMILIA", "DURACION_HORAS" };
-						String[] valoresElementos = { dato1, dato2, dato3, dato4, dato5, dato6 };
-						String nuevoId = String.valueOf(System.currentTimeMillis() % 1000);
-
-						escribirXML(xmlFilePath, nombresElementos, valoresElementos, nuevoId);
-						page = "TratamientoFich.jsp"; // Redirige al formulario
-					} catch (Exception e) {
-						page = "Error.jsp";
-					}
-				}
-				break;
 			}
+			// Enviar la respuesta, para que segun lo seleccionado, haga lo que se quiera
+			request.setAttribute("errorMensaje", respuesta);
+			RequestDispatcher dispatcher = request.getRequestDispatcher(page);
+			dispatcher.forward(request, response);
+		} catch (Exception e) {
+			// Redirigir a la página de error
+			request.setAttribute("javax.servlet.error.message", e.getMessage());
+			request.setAttribute("javax.servlet.error.exception", e);
+			request.getRequestDispatcher("/error.jsp").forward(request, response);
 		}
-		// Enviar la respuesta, para que segun lo seleccionado, haga lo que se quiera
-		request.setAttribute("errorMensaje", respuesta);
-		RequestDispatcher dispatcher = request.getRequestDispatcher(page);
-		dispatcher.forward(request, response);
 	}
 
 	// PARTE DE ALBERTO
@@ -336,185 +322,145 @@ public class ServletFich extends HttpServlet {
 	}
 
 	// PARTE DE GONZALO
-	 private List<String[]> leerSimilXLS(String rutaArchivo) throws IOException {
-	        List<String[]> datos = new ArrayList<>();
-	        File archivo = new File(rutaArchivo);
+	private List<String[]> leerXLS(String rutaArchivo) throws IOException {
+		List<String[]> datos = new ArrayList<>();
+		File archivo = new File(rutaArchivo);
 
-	        if (!archivo.exists()) {
-	            throw new FileNotFoundException("El archivo no existe en la ruta especificada: " + rutaArchivo);
-	        }
+		if (!archivo.exists()) {
+			throw new FileNotFoundException("El archivo no existe: " + rutaArchivo);
+		}
 
-	        // Crear InputStream para leer el archivo
-	        try (FileInputStream fis = new FileInputStream(archivo);
-	             Workbook workbook = obtenerWorkbook(fis, rutaArchivo)) {
+		try (FileInputStream fis = new FileInputStream(archivo); Workbook workbook = obtenerWorkbook(archivo)) {
 
-	            // Obtener la primera hoja del archivo
-	            Sheet sheet = workbook.getSheetAt(0);
-	            for (Row row : sheet) {
-	                String[] fila = leerCelulasDeFila(row);
-	                datos.add(fila);
-	            }
-	        }
-	        return datos;
-	    }
+			org.apache.poi.ss.usermodel.Sheet sheet = workbook.getSheetAt(0);
 
-	    
-	    // Método para leer las celdas de una fila
-	    private String[] leerCelulasDeFila(Row row) {
-	        String[] fila = new String[row.getPhysicalNumberOfCells()];
-	        for (int i = 0; i < row.getPhysicalNumberOfCells(); i++) {
-	            Cell cell = row.getCell(i);
-	            fila[i] = obtenerValorDeCelda(cell);
-	        }
-	        return fila;
-	    }
+			for (Row row : sheet) {
+				List<String> fila = new ArrayList<>();
+				for (org.apache.poi.ss.usermodel.Cell cell : row) {
+					fila.add(obtenerCelda(cell));
+				}
+				datos.add(fila.toArray(new String[0]));
+			}
+		}
+		return datos;
+	}
 
-	    // Método para obtener el valor de una celda
-	    private String obtenerValorDeCelda(Cell cell) {
-	        switch (cell.getCellType()) {
-	            case NUMERIC:
-	                return String.valueOf(cell.getNumericCellValue());
-	            case STRING:
-	                return cell.getStringCellValue();
-	            case BOOLEAN:
-	                return String.valueOf(cell.getBooleanCellValue());
-	            default:
-	                return "";
-	        }
-	    }
+	private String obtenerCelda(org.apache.poi.ss.usermodel.Cell cell) {
+		switch (cell.getCellType()) {
+		case NUMERIC:
+			return String.valueOf(cell.getNumericCellValue());
+		case STRING:
+			return cell.getStringCellValue();
+		case BOOLEAN:
+			return String.valueOf(cell.getBooleanCellValue());
+		default:
+			return "";
+		}
+	}
 
-    private void escribirSimilXLS(String rutaArchivo, String[] valoresFila) throws IOException {
-        File archivo = new File(rutaArchivo);
+	private void escribirXLS(String rutaArchivo, String[] valoresFila) throws IOException {
+		File archivo = new File(rutaArchivo);
 
-        // Crear archivo si no existe
-        if (!archivo.exists()) {
-            if (!archivo.createNewFile()) {
-                throw new IOException("No se pudo crear el archivo: " + rutaArchivo);
-            }
-        }
+		try (FileInputStream fis = archivo.exists() ? new FileInputStream(archivo) : null;
+				Workbook workbook = archivo.exists() ? obtenerWorkbook(archivo) : new XSSFWorkbook()) {
 
-        // Abrir el archivo Excel para lectura y escritura
-        try (FileInputStream fis = new FileInputStream(archivo);
-             Workbook workbook = obtenerWorkbook(fis, rutaArchivo)) {
+			org.apache.poi.ss.usermodel.Sheet sheet = workbook.getSheet("Datos");
+			if (sheet == null) {
+				sheet = workbook.createSheet("Datos");
+			}
 
-            // Obtener o crear la hoja
-            Sheet sheet;
-            if (workbook.getSheetAt(0) != null) {
-                sheet = workbook.getSheetAt(0);  // Usar la primera hoja existente
-            } else {
-                sheet = workbook.createSheet("Datos"); // Crear una nueva hoja si no existe
-            }
+			int rowNum = sheet.getPhysicalNumberOfRows();
+			Row fila = sheet.createRow(rowNum);
 
-            // Crear una nueva fila al final de la hoja
-            int rowNum = sheet.getPhysicalNumberOfRows();
-            Row row = sheet.createRow(rowNum);
+			for (int i = 0; i < valoresFila.length; i++) {
+				org.apache.poi.ss.usermodel.Cell cell = fila.createCell(i);
+				cell.setCellValue(valoresFila[i]);
+			}
 
-            // Escribir los valores en las celdas
-            for (int i = 0; i < valoresFila.length; i++) {
-                Cell cell = row.createCell(i);
-                cell.setCellValue(valoresFila[i]);
-            }
+			try (FileOutputStream fos = new FileOutputStream(archivo)) {
+				workbook.write(fos);
+			}
+		}
+	}
 
-            // Guardar el archivo
-            try (FileOutputStream fos = new FileOutputStream(archivo)) {
-                workbook.write(fos); // Escribir el contenido actualizado
-            }
-        }
-    }
-
-    private Workbook obtenerWorkbook(FileInputStream fis, String rutaArchivo) throws IOException {
-        if (rutaArchivo.endsWith(".xls")) {
-            return new HSSFWorkbook(fis); // Para archivos .xls
-        } else if (rutaArchivo.endsWith(".xlsx")) {
-            return new XSSFWorkbook(fis); // Para archivos .xlsx
-        } else {
-            throw new IOException("Formato de archivo no soportado.");
-        }
-    }
-
-
-
-    // Método para obtener un Workbook para escritura
-    private Workbook obtenerWorkbook(FileOutputStream fos, String rutaArchivo) throws IOException {
-        if (rutaArchivo.endsWith(".xls")) {
-            return new HSSFWorkbook(); // Para archivos .xls
-        } else if (rutaArchivo.endsWith(".xlsx")) {
-            return new XSSFWorkbook(); // Para archivos .xlsx
-        } else {
-            throw new IOException("Formato de archivo no soportado.");
-        }
-    }
+	private Workbook obtenerWorkbook(File archivo) throws IOException {
+		try (FileInputStream fis = new FileInputStream(archivo)) {
+			if (archivo.getName().endsWith(".xls")) {
+				return new HSSFWorkbook(fis);
+			} else if (archivo.getName().endsWith(".xlsx")) {
+				return new XSSFWorkbook(fis);
+			} else {
+				throw new IOException("Formato no soportado.");
+			}
+		}
+	}
 
 	// PARTE DE LUCAS
-	public void escribirRDF(String name, String age, String email, String url, String friendName, String friendUrl, String rdfFilePath) {
-	    try {
-	        // Cargar o crear un modelo RDF
-	        Model model = ModelFactory.createDefaultModel();
-	        File rdfFile = new File(rdfFilePath);
-	        model.read(new FileInputStream(rdfFile), null);
-	        
-	        
-	        // Crear las descripciones
-	        Resource person = model.createResource(url)
-	                .addProperty(VCARD.FN, name)
-	                .addProperty(model.createProperty("http://xmlns.com/foaf/0.1/age"), age)
-	                .addProperty(VCARD.EMAIL, email);
+	public void escribirRDF(String name, String age, String email, String url, String friendName, String friendUrl,
+			String rdfFilePath) {
+		try {
+			// Cargar o crear un modelo RDF
+			Model model = ModelFactory.createDefaultModel();
+			File rdfFile = new File(rdfFilePath);
+			model.read(new FileInputStream(rdfFile), null);
 
-	        Resource friend = model.createResource(friendUrl)
-	                .addProperty(VCARD.FN, friendName);
+			// Crear las descripciones
+			Resource person = model.createResource(url).addProperty(VCARD.FN, name)
+					.addProperty(model.createProperty("http://xmlns.com/foaf/0.1/age"), age)
+					.addProperty(VCARD.EMAIL, email);
 
-	        person.addProperty(model.createProperty("http://xmlns.com/foaf/0.1/knows"), friend);
+			Resource friend = model.createResource(friendUrl).addProperty(VCARD.FN, friendName);
 
-	        // Guardar los cambios en el archivo RDF
-	        try (FileOutputStream out = new FileOutputStream(rdfFile)) {
-	            model.write(out, "RDF/XML");
-	        }
-	    } catch (IOException e) {
-	        System.err.println("Error al leer o escribir el archivo RDF: " + e.getMessage());
-	    }
+			person.addProperty(model.createProperty("http://xmlns.com/foaf/0.1/knows"), friend);
+
+			// Guardar los cambios en el archivo RDF
+			try (FileOutputStream out = new FileOutputStream(rdfFile)) {
+				model.write(out, "RDF/XML");
+			}
+		} catch (IOException e) {
+			System.err.println("Error al leer o escribir el archivo RDF: " + e.getMessage());
+		}
 	}
-    
 
 	private void leerRDF(String rdfFilePath, HttpServletRequest request) {
-	    List<String> subjects = new ArrayList<>();
-	    List<String> predicates = new ArrayList<>();
-	    List<String> objects = new ArrayList<>();
-	    
-	    File rdfFile = new File(rdfFilePath);
+		List<String> subjects = new ArrayList<>();
+		List<String> predicates = new ArrayList<>();
+		List<String> objects = new ArrayList<>();
 
-	    // Verificar si el archivo existe
-	    if (!rdfFile.exists()) {
-	        System.err.println("El archivo RDF no existe: " + rdfFilePath);
-	        request.setAttribute("rdfData", Arrays.asList(subjects, predicates, objects));
-	        return;
-	    }
+		File rdfFile = new File(rdfFilePath);
 
-	    try {
-	        // Crear un modelo RDF
-	        Model model = ModelFactory.createDefaultModel();
-	        // Leer el archivo RDF
-	        model.read(new FileInputStream(rdfFile), null);
+		// Verificar si el archivo existe
+		if (!rdfFile.exists()) {
+			System.err.println("El archivo RDF no existe: " + rdfFilePath);
+			request.setAttribute("rdfData", Arrays.asList(subjects, predicates, objects));
+			return;
+		}
 
-	        // Iterar por todos los triples y almacenarlos en las listas
-	        StmtIterator iter = model.listStatements();
-	        while (iter.hasNext()) {
-	            Statement stmt = iter.nextStatement();
-	            String subject = stmt.getSubject().toString();
-	            String predicate = stmt.getPredicate().toString();
-	            String object = stmt.getObject().toString();
+		try {
+			// Crear un modelo RDF
+			Model model = ModelFactory.createDefaultModel();
+			// Leer el archivo RDF
+			model.read(new FileInputStream(rdfFile), null);
 
-	            subjects.add(subject);
-	            predicates.add(predicate);
-	            objects.add(object);
-	        }
+			// Iterar por todos los triples y almacenarlos en las listas
+			StmtIterator iter = model.listStatements();
+			while (iter.hasNext()) {
+				Statement stmt = iter.nextStatement();
+				String subject = stmt.getSubject().toString();
+				String predicate = stmt.getPredicate().toString();
+				String object = stmt.getObject().toString();
 
-	    } catch (IOException e) {
-	        System.err.println("Error al leer el archivo RDF: " + e.getMessage());
-	    }
+				subjects.add(subject);
+				predicates.add(predicate);
+				objects.add(object);
+			}
 
-	    request.setAttribute("rdfData", Arrays.asList(subjects, predicates, objects));
+		} catch (IOException e) {
+			System.err.println("Error al leer el archivo RDF: " + e.getMessage());
+		}
+
+		request.setAttribute("rdfData", Arrays.asList(subjects, predicates, objects));
 	}
-
 
 	// PARTE DE ALEJANDRO
 	// Para la lectura
